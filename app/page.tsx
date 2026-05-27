@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Fuse from 'fuse.js';
 import { db } from '../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { CldImage } from 'next-cloudinary';
 
 interface Martyr {
   id: string;
@@ -12,6 +13,7 @@ interface Martyr {
   martyrdomDay: number;
   martyrdomMonth: number;
   keywords: string[];
+  imageUrl?: string; // أضفنا حقل الصورة هنا
 }
 
 export default function Home() {
@@ -42,7 +44,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="max-w-2xl mx-auto px-4 py-12 text-right">
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
           منصة توثيق شهداء داريا
         </h1>
@@ -67,9 +69,33 @@ export default function Home() {
 
         {results.map(m => (
           <a href={`/martyr/${m.id}`} key={m.id}
-            className="block bg-white border border-gray-200 rounded-xl p-4 mb-3 hover:shadow-md transition">
-            <p className="font-bold text-gray-800">{m.fullName}</p>
-            <p className="text-gray-500 text-sm">{m.cemetery === 'northern' ? 'المقبرة الشمالية' : 'المقبرة الجنوبية'} - {m.graveNumber}</p>
+            className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 mb-3 hover:shadow-md transition">
+            
+            {/* عرض صورة الشهيد مصغرة على اليمين */}
+            <div className="w-16 h-16 relative rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center border border-gray-200">
+              {m.imageUrl ? (
+                <CldImage
+                  src={m.imageUrl}
+                  alt={m.fullName}
+                  width="64"
+                  height="64"
+                  crop="fill"
+                  gravity="face" // يركز تلقائياً على الوجه داخل الدائرة
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                // رمز افتراضي في حال لم ترفع له صورة بعد
+                <span className="text-gray-400 text-xs">بدون صورة</span>
+              )}
+            </div>
+
+            {/* تفاصيل الشهيد بجانب الصورة */}
+            <div className="flex-1">
+              <p className="font-bold text-gray-800 text-lg mb-1">{m.fullName}</p>
+              <p className="text-gray-500 text-sm">
+                {m.cemetery === 'northern' ? 'المقبرة الشمالية' : 'المقبرة الجنوبية'} - رقم القبر: {m.graveNumber}
+              </p>
+            </div>
           </a>
         ))}
       </div>
